@@ -1,0 +1,7 @@
+.env
+session.json
+cookies.json
+following.csv
+__pycache__/
+*.pyc
+venv/
