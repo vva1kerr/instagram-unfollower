@@ -14,7 +14,7 @@ Usage:
 import argparse
 import csv
 import sys
-from config import CSV_FILE, CSV_COLUMNS, STATUS_KEEP, STATUS_UNFOLLOW, STATUS_UNFOLLOWED
+from config import CSV_FILE, CSV_COLUMNS, STATUS_KEEP, STATUS_UNFOLLOW, STATUS_UNFOLLOWED, STATUS_SKIPPED
 
 
 def cmd_login(args):
@@ -81,6 +81,7 @@ def cmd_status(args):
     keep = sum(1 for r in rows if r["status"] == STATUS_KEEP)
     unfollow = sum(1 for r in rows if r["status"] == STATUS_UNFOLLOW)
     unfollowed = sum(1 for r in rows if r["status"] == STATUS_UNFOLLOWED)
+    skipped = sum(1 for r in rows if r["status"] == STATUS_SKIPPED)
     blank = sum(1 for r in rows if r["status"] == "")
 
     print(f"[Status] CSV: {CSV_FILE}")
@@ -88,9 +89,10 @@ def cmd_status(args):
     print(f"  keep:          {keep}")
     print(f"  unfollow:      {unfollow}")
     print(f"  unfollowed:    {unfollowed}")
+    print(f"  skipped:       {skipped}")
     print(f"  unmarked:      {blank}")
-    if unfollowed:
-        still_following = total - unfollowed
+    if unfollowed or skipped:
+        still_following = total - unfollowed - skipped
         print(f"  still following: {still_following}")
 
 

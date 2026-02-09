@@ -25,3 +25,4 @@ CSV_COLUMNS = ["username", "user_id", "full_name", "follows_you", "status", "dat
 STATUS_KEEP = "keep"
 STATUS_UNFOLLOW = "unfollow"
 STATUS_UNFOLLOWED = "unfollowed"
+STATUS_SKIPPED = "skipped"

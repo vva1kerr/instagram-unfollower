@@ -12,6 +12,7 @@ from config import (
     STATUS_KEEP,
     STATUS_UNFOLLOW,
     STATUS_UNFOLLOWED,
+    STATUS_SKIPPED,
     DAILY_UNFOLLOW_LIMIT,
     MIN_DELAY_SECONDS,
     MAX_DELAY_SECONDS,
@@ -253,11 +254,15 @@ def run_unfollow(driver, dry_run=False, mode=None):
                 print("ALREADY UNFOLLOWED (marked done)")
 
             elif result == "not_found":
-                print("SKIPPED (could not find Following button)")
+                target["status"] = STATUS_SKIPPED
+                target["date_unfollowed"] = datetime.now().isoformat(timespec="seconds")
+                print("SKIPPED (account no longer exists)")
                 skipped_count += 1
 
             elif result == "dialog_failed":
-                print("FAILED (unfollow dialog issue)")
+                target["status"] = STATUS_SKIPPED
+                target["date_unfollowed"] = datetime.now().isoformat(timespec="seconds")
+                print("SKIPPED (unfollow dialog issue)")
                 skipped_count += 1
 
         except KeyboardInterrupt:
@@ -268,6 +273,8 @@ def run_unfollow(driver, dry_run=False, mode=None):
 
         except Exception as e:
             print(f"ERROR: {e}")
+            target["status"] = STATUS_SKIPPED
+            target["date_unfollowed"] = datetime.now().isoformat(timespec="seconds")
             skipped_count += 1
             # Check if we got logged out
             if "login" in driver.current_url:
