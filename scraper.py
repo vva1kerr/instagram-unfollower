@@ -35,7 +35,27 @@ def _extract_username(entry):
     return None
 
 
-def import_from_json(following_json_path, followers_json_path=None):
+def _check_duplicates_in_list(entries, label):
+    """Check for duplicate usernames in a list of JSON entries. Returns (unique_set, duplicates_list)."""
+    seen = {}
+    duplicates = []
+    for entry in entries:
+        username = _extract_username(entry)
+        if username:
+            if username in seen:
+                duplicates.append(username)
+            else:
+                seen[username] = True
+    if duplicates:
+        from collections import Counter
+        counts = Counter(duplicates)
+        print(f"[Duplicates] Found {len(duplicates)} duplicate entries in {label}:")
+        for uname, extra_count in counts.most_common():
+            print(f"  @{uname} appears {extra_count + 1} times")
+    return set(seen.keys()), duplicates
+
+
+def import_from_json(following_json_path, followers_json_path=None, check_duplicates=False):
     """
     Import following list from Instagram's data download JSON files.
 
@@ -66,11 +86,14 @@ def import_from_json(following_json_path, followers_json_path=None):
         print(f"  Top-level keys found: {list(data.keys())}")
         sys.exit(1)
 
-    following_usernames = set()
-    for entry in following_list:
-        username = _extract_username(entry)
-        if username:
-            following_usernames.add(username)
+    if check_duplicates:
+        following_usernames, json_dupes = _check_duplicates_in_list(following_list, "following JSON")
+    else:
+        following_usernames = set()
+        for entry in following_list:
+            username = _extract_username(entry)
+            if username:
+                following_usernames.add(username)
 
     print(f"[Import] Found {len(following_usernames)} accounts you follow.")
 
@@ -93,10 +116,13 @@ def import_from_json(following_json_path, followers_json_path=None):
                     if isinstance(v, list):
                         followers_list = v
                         break
-            for entry in followers_list:
-                username = _extract_username(entry)
-                if username:
-                    followers_usernames.add(username)
+            if check_duplicates:
+                followers_usernames, follower_dupes = _check_duplicates_in_list(followers_list, "followers JSON")
+            else:
+                for entry in followers_list:
+                    username = _extract_username(entry)
+                    if username:
+                        followers_usernames.add(username)
             print(f"[Import] Found {len(followers_usernames)} followers.")
         else:
             print(f"[Import] Followers file not found: {followers_path}")
@@ -104,11 +130,26 @@ def import_from_json(following_json_path, followers_json_path=None):
 
     # Load existing CSV to preserve manual edits
     existing = {}
+    csv_duplicates = []
     if CSV_FILE.exists():
         with open(CSV_FILE, "r", newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                existing[row["username"]] = row
+                uname = row["username"]
+                if uname in existing:
+                    csv_duplicates.append(uname)
+                existing[uname] = row
+        if check_duplicates and csv_duplicates:
+            from collections import Counter
+            counts = Counter(csv_duplicates)
+            print(f"[Duplicates] Found {len(csv_duplicates)} duplicate rows in existing CSV:")
+            for uname, extra_count in counts.most_common():
+                print(f"  @{uname} appears {extra_count + 1} times")
+
+    if check_duplicates:
+        overlap = following_usernames & set(existing.keys())
+        if overlap:
+            print(f"[Duplicates] {len(overlap)} usernames in JSON already exist in CSV (will be merged).")
 
     # Build rows
     rows = []

@@ -14,7 +14,7 @@ IG_USERNAME = os.getenv("INSTAGRAM_USERNAME", "")
 IG_PASSWORD = os.getenv("INSTAGRAM_PASSWORD", "")
 
 # Rate-limiting defaults (all overridable via .env)
-DAILY_UNFOLLOW_LIMIT = int(os.getenv("DAILY_UNFOLLOW_LIMIT", "200"))
+DAILY_UNFOLLOW_LIMIT = int(os.getenv("DAILY_UNFOLLOW_LIMIT", "500"))
 MIN_DELAY_SECONDS = int(os.getenv("MIN_DELAY_SECONDS", "5"))
 MAX_DELAY_SECONDS = int(os.getenv("MAX_DELAY_SECONDS", "15"))
 

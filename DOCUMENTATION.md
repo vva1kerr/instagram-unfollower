@@ -751,3 +751,43 @@ The tradeoff is speed (Selenium is slower) and resource usage (Chrome uses more 
 - pathlib module: https://docs.python.org/3/library/pathlib.html
 - random module: https://docs.python.org/3/library/random.html
 - datetime module: https://docs.python.org/3/library/datetime.html
+
+---
+
+## Duplicate Checking on Import
+
+### Flag
+
+```bash
+python main.py import-json following.json followers.json --check-duplicates
+```
+
+### What It Checks
+
+The `--check-duplicates` flag adds a duplicate detection report during `import-json`. It checks three sources:
+
+1. **Following JSON**: Scans the input `following.json` for usernames that appear more than once. Reports each duplicate with its total count.
+2. **Followers JSON**: Same check on the optional `followers.json` file.
+3. **Existing CSV**: Scans `following.csv` for rows with the same username (can happen from manual edits or spreadsheet copy-paste errors).
+4. **JSON-to-CSV overlap**: Reports how many usernames from the JSON import already exist in the CSV. These are merged (existing status/date preserved), not duplicated.
+
+### Output Example
+
+```
+[Duplicates] Found 3 duplicate entries in following JSON:
+  @someuser appears 2 times
+  @anotheruser appears 3 times
+[Duplicates] Found 1 duplicate rows in existing CSV:
+  @editeduser appears 2 times
+[Duplicates] 847 usernames in JSON already exist in CSV (will be merged).
+```
+
+### Behavior Without the Flag
+
+Without `--check-duplicates`, the import works exactly as before. Duplicates in the JSON are silently deduplicated (usernames are collected into a Python `set`). The CSV is always written deduplicated regardless of the flag — the flag only controls whether the report is printed.
+
+### Implementation
+
+- `_check_duplicates_in_list()` in `scraper.py`: Iterates JSON entries, tracks seen usernames, collects duplicates, and prints a summary using `collections.Counter`.
+- CSV duplicate detection happens during the existing CSV load step by checking if a username was already seen in the `existing` dict.
+- JSON-to-CSV overlap is computed as the set intersection of JSON usernames and existing CSV usernames.

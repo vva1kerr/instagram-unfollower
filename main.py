@@ -40,7 +40,7 @@ def cmd_login(args):
 def cmd_import_json(args):
     """Import following list from Instagram's JSON data download."""
     from scraper import import_from_json
-    import_from_json(args.following_json, args.followers_json)
+    import_from_json(args.following_json, args.followers_json, check_duplicates=args.check_duplicates)
 
 
 def cmd_unfollow(args):
@@ -119,6 +119,10 @@ def main():
         nargs="?",
         default=None,
         help="(Optional) Path to followers.json to compare mutual follows"
+    )
+    import_parser.add_argument(
+        "--check-duplicates", action="store_true",
+        help="Check for and report duplicate usernames in JSON and CSV"
     )
 
     # unfollow
